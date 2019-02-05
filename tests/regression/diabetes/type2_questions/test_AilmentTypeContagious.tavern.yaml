@@ -1,0 +1,77 @@
+test_name: Verify EMAApplicationKBQ-IsAnAilmentTypeContagious template with intent combinations -
+
+marks:
+    - usefixtures:
+        - user_input_cmd_option
+        - provide_user_info_for_test
+
+    - parametrize:
+          key:
+              - first_user_resp
+              - second_user_resp
+              - results_found_msg_instruct
+          vals:
+              - [Is this disease contagious,type 2 diabetes,Here is what I found]
+
+stages:      
+  - type: ref
+    id: create_session_models_for_type2_test
+
+  - name: Get a question from user
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_get_question:s}"
+        json:
+            username: "{provide_user_info_for_test.user_info.username}"
+            user_model_name: "{provide_user_info_for_test.user_info.user_model_name}"
+            session_id: "{provide_user_info_for_test.user_info.session_id}"
+            user_response: "{first_user_resp}"
+            no_answer_nl: ''
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+            cyc_topics: ['InfectionCommunicabilityLevel'] #Have to check with vivek
+            stage: 'in-progress'
+            success: true
+            mappings: []
+            template: 'EMAApplicationKBQ-IsAnAilmentTypeContagious'
+            endpoint: '{apiInfo.eva_get_answer:s}'
+            #nl: '!anystr'   # this response string is supporting unicode type and tavern is not supporting unicode string
+            $ext:
+                function: ask_eva_api_automation.test_utilities.helpers:validate_unicode_type_string_in_resp
+            
+  - name: Prompt the user to give relevant data for answering the question
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_get_answer:s}"
+        json:
+            username: "{provide_user_info_for_test.user_info.username}"
+            user_model_name: "{provide_user_info_for_test.user_info.user_model_name}"
+            session_id: "{provide_user_info_for_test.user_info.session_id}"
+            user_response: "{second_user_resp}"
+            no_answer_nl: ''
+            nl: "In order for me to help you answer the question {first_user_resp}? I need some information, namely: the ailment."
+            results_found_message: "{results_found_msg_instruct}"
+            stage: "in-progress"
+            success: true
+            template: "EMAApplicationKBQ-IsAnAilmentTypeContagious"
+
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+            #cyc_topics: []
+            stage: 'completed'
+            success: true
+            mappings: []
+            template: 'EMAApplicationKBQ-IsAnAilmentTypeContagious'
+            endpoint: '{apiInfo.eva_end:s}'
+            #nl: '!anystr'   # this response string is supporting unicode type and tavern is not supporting unicode string
+            $ext:
+                function: ask_eva_api_automation.test_utilities.helpers:validate_unicode_type_string_in_resp
+
+  - type: ref
+    id: clear_session_remove_models_for_type2_test

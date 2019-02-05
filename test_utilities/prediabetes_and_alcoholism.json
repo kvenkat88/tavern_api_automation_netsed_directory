@@ -1,0 +1,67 @@
+{
+	"userType": [{
+		"prediabetes_and_alcoholism": [{
+				"Complications": {
+					"questions": [{
+							"What are the complications of diabetes?": {
+								"stage": "completed",
+								"success": true,
+								"template": "EMAApplicationKBQ-ComplicationsOfCondition"
+							}
+						},
+						{
+							"complications of diabetes": {
+								"stage": "completed",
+								"success": true,
+								"template": "EMAApplicationKBQ-ComplicationsOfCondition"
+							}
+						},
+						{
+							"show me the complications of diabetes type2": {
+								"stage": "completed",
+								"success": true,
+								"template": "EMAApplicationKBQ-ComplicationsOfCondition"
+							}
+						},
+						{
+							"show me the complications of diabetes": {
+								"stage": "completed",
+								"success": true,
+								"template": "EMAApplicationKBQ-ComplicationsOfCondition"
+							}
+						}
+					]
+				}
+
+			},
+			{
+				"Speciality": {
+					"questions": [{
+							"Which medical specialties are relevant to diabetes type 2": {
+								"stage": "completed",
+								"success": true,
+								"template": "EMAApplicationKBQ-ManagingSpecialityOfCondition"
+							}
+						}
+
+					]
+				}
+
+			},
+			{
+				"SuitablePhysician": {
+					"questions": [{
+							"An appropriate physician for me": {
+								"stage": "completed",
+								"success": true,
+								"template": "EMAApplicationKBQ-SuitablePhysician"
+							}
+						}
+
+					]
+				}
+
+			}
+		]
+	}]
+}

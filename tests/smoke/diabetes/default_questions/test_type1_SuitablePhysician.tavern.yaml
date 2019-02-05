@@ -1,0 +1,39 @@
+test_name: Verify EMAApplicationKBQ-SuitablePhysician template with intent combinations -
+
+marks:
+    - smoke
+    - usefixtures:
+        - user_input_cmd_option
+        - provide_user_info_for_test
+
+    - parametrize:
+        key: possible_question_set
+        vals:
+          - 'An appropriate physician for me'
+
+stages:
+  - name: Check EMAApplicationKBQ-SuitablePhysician template and intent
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_get_question:s}"
+        json:
+            username: "{provide_user_info_for_test.user_info.username}"
+            user_model_name: "{provide_user_info_for_test.user_info.user_model_name}"
+            session_id: "{provide_user_info_for_test.user_info.session_id}"
+            user_response: "{possible_question_set}"
+            no_answer_nl: ''
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+          $ext:
+            #Below helper utility method would parse the response and validate the responses as per the requirements stated
+            function: ask_eva_api_automation.test_utilities.helpers:response_fetch_parser_from_tavern_tests
+            extra_kwargs:
+                user_type: "{user_input_cmd_option}"
+                ailments_category: "SuitablePhysician"
+                question: "{possible_question_set}"
+                endpoint_tag: "{apiInfo.eva_end:s}"
+
+

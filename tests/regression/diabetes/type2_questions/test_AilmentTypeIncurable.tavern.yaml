@@ -1,0 +1,73 @@
+test_name: Verify EMAApplicationKBQ-IsAnAilmentTypeIncurable template with intent combinations -
+
+marks:
+    - usefixtures:
+        - user_input_cmd_option
+        - provide_user_info_for_test
+
+    - parametrize:
+          key:
+              - first_user_resp
+              - second_user_resp
+              - results_found_msg_instruct
+          vals:
+              - [Whether this disease is incurable,type 2 diabetes,Here is what I found]
+
+stages:      
+  - type: ref
+    id: create_session_models_for_type2_test
+                
+  - name: Get a question from user
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_get_question:s}"
+        json:
+            username: "{provide_user_info_for_test.user_info.username}"
+            user_model_name: "{provide_user_info_for_test.user_info.user_model_name}"
+            session_id: "{provide_user_info_for_test.user_info.session_id}"
+            user_response: '{first_user_resp}'
+            no_answer_nl: ''
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+            cyc_topics: []
+            stage: 'in-progress'
+            success: true
+            mappings: []
+            nl: '!anystr'
+            template: 'EMAApplicationKBQ-IsAnAilmentTypeIncurable'
+            endpoint: '{apiInfo.eva_get_answer:s}'
+            
+  - name: Prompt the user to give relevant data for answering the question
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_get_answer:s}"
+        json:
+            username: "{provide_user_info_for_test.user_info.username}"
+            user_model_name: "{provide_user_info_for_test.user_info.user_model_name}"
+            session_id: "{provide_user_info_for_test.user_info.session_id}"
+            user_response: '{second_user_resp}'
+            no_answer_nl: ''
+            nl: "In order for me to help you answer the question What might this ailment cause? I need some information, namely: the ailment."
+            results_found_message: "{results_found_msg_instruct}"
+            stage: "in-progress"
+            success: true
+            template: "EMAApplicationKBQ-IsAnAilmentTypeIncurable"
+
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+            cyc_topics: []
+            stage: 'completed'
+            success: true
+            mappings: []
+            nl: '!anystr'
+            template: 'EMAApplicationKBQ-IsAnAilmentTypeIncurable'
+            endpoint: '{apiInfo.eva_end:s}'
+
+  - type: ref
+    id: clear_session_remove_models_for_type2_test

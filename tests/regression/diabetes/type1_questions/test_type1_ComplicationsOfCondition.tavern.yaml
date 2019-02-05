@@ -1,0 +1,46 @@
+test_name: Verify EMAApplicationKBQ-ComplicationsOfCondition template with intent combinations -
+
+marks:
+    - usefixtures:
+        - user_input_cmd_option
+        - provide_user_info_for_test
+
+    - parametrize:
+        key: possible_question_set
+        vals:
+          - 'What are the complications of diabetes?'
+          - 'complications of diabetes'
+          - 'show me the complications of diabetes type2'
+          - 'show me the complications of diabetes'
+
+stages:
+  - name: Check EMAApplicationKBQ-ComplicationsOfCondition template and intent
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_get_question:s}"
+        json:
+            username: "{provide_user_info_for_test.user_info.username}"
+            user_model_name: "{provide_user_info_for_test.user_info.user_model_name}"
+            session_id: "{provide_user_info_for_test.user_info.session_id}"
+            user_response: "{possible_question_set}"  #'What are the complications of diabetes'
+            no_answer_nl: ''
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+          $ext:
+            #Below helper utility method would parse the response and validate the responses as per the requirements stated
+            function: ask_eva_api_automation.test_utilities.helpers:response_fetch_parser_from_tavern_tests
+            extra_kwargs:
+                user_type: "{user_input_cmd_option}"
+                ailments_category: "Complications"
+                question: "{possible_question_set}"
+                endpoint_tag: "{apiInfo.eva_end:s}"
+
+          #This type of response has been scraped out to perform response validation with helper utilty functions having the assert statements
+          #stage: 'completed'
+          #success: true
+          #template: 'EMAApplicationKBQ-ComplicationsOfCondition'
+          #endpoint: '{apiInfo.eva_end:s}'
+          #nl: !anystr

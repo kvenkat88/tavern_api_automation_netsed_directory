@@ -1,0 +1,261 @@
+test_name: Verify_Blood_Sugar_Workflow BloodSugarFlowTemplate template with intent combinations -
+
+marks:
+    - smoke
+    - usefixtures:
+        - user_input_cmd_option
+        - provide_user_info_for_test
+
+    - parametrize:
+          key:
+              - first_user_resp
+              - blood_sugar_level_for_resp_parse
+              - test_conducted_place_resp
+              - test_hours_before_meal
+          vals:
+              - [Is my blood sugar of 200 normal,200,in-home,9]
+
+stages:
+  - name: Create session and models.
+    request:
+      url: "{host.server_url:s}{apiInfo.eva_start:s}"
+      json: &fetch_request_object_info
+        username: "{provide_user_info_for_test.user_info.username:s}"
+        user_model_name: "{provide_user_info_for_test.user_info.user_model_name:s}"
+        session_id: "{provide_user_info_for_test.user_info.session_id:s}"
+        user_response: "{first_user_resp}"
+
+      method: POST
+      headers:
+        content-type: application/json
+    response:
+      status_code: 200
+      body:
+        endpoint: '{apiInfo.eva_get_question:s}'
+
+
+  - name: Prepare blood sugar normal question
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_get_question:s}"
+        json:
+            <<: *fetch_request_object_info
+            #username: "{provide_user_info_for_test.user_info.username:s}"
+            #user_model_name: "{provide_user_info_for_test.user_info.user_model_name:s}"
+            #session_id: "{provide_user_info_for_test.user_info.session_id:s}"
+            #user_response: "{first_user_resp}"
+            endpoint: "{apiInfo.eva_get_question:s}"
+            no_answer_nl: ""
+            keep_user_response: true
+
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+            cyc_topics: ["Normal-Usual","GlucoseTest",!int "{blood_sugar_level_for_resp_parse:d}"]
+            stage: 'in-progress'
+            template: 'EMAApplicationCreationTemplate-CreateTestOfTypeWithResultValue'
+            mappings: [{"key":"(TheNamedFn MedicallyRelatedCareEventType-EMA \"The care event type asked about\")","value":"GlucoseTest"},{"key":"(TheNamedFn RealNumber \"the test value\")","value":!int "{blood_sugar_level_for_resp_parse:d}"}]
+            template_type: 'create'
+            endpoint: '{apiInfo.eva_create_and_get_answer:s}'
+            nl: false
+            no_answer_nl: ""
+            success: true
+        save:
+          body:
+            next_template: template
+            next_template_type: template_type
+
+  - name: Create test/model for the user and get answer
+    request:
+      url: "{host.server_url:s}{apiInfo.eva_create_and_get_answer:s}"
+      json:
+        <<: *fetch_request_object_info
+        endpoint: "{apiInfo.eva_create_and_get_answer:s}"
+        user_response: ""
+        no_answer_nl: ""
+        null_responses: "Sorry! Cant answer at the moment due to an issue."
+        error_responses: "Oops! Can I get back to you later?"
+        nl: false
+        stage: 'in-progress'
+        template: "{next_template:s}"
+        template_type: "{next_template_type:s}"
+        cyc_topics: ["Normal-Usual","GlucoseTest",!int "{blood_sugar_level_for_resp_parse:d}"]
+        mappings: [{"key":"(TheNamedFn MedicallyRelatedCareEventType-EMA \"The care event type asked about\")","value":"GlucoseTest"},{"key":"(TheNamedFn RealNumber \"the test value\")","value":!int "{blood_sugar_level_for_resp_parse:d}"}]
+        entities_and_cyc_terms: {}
+        results_found_message: "nan"
+        search_suggestions: "nan"
+        success: true
+
+      method: POST
+      headers:
+        content-type: application/json
+    response:
+      status_code: 200
+      body:
+        UserResponseProcessor: "process_by_cyc"
+        created_indexical: "(#$TheNamedFn #$MedicalTesting \"test the user mentioned\")"
+        created_indexical_trimmed: "(TheNamedFn MedicalTesting \"test the user mentioned\")"
+        created_mapping: "(#$TheList (#$TheNamedFn #$MedicalTesting \"test the user mentioned\") #${provide_user_info_for_test.user_info.user_model_name:s})"
+        created_new_term: '{provide_user_info_for_test.user_info.user_model_name:s}'
+        nl: 'I need some additional information in order to answer this question.  Was your test an in-home or lab test?'
+        no_answer_nl: ""
+        user_response: ""
+        responseRequired: true
+        results_found_message: "nan"
+        return_user_state: true
+        search_suggestions: "nan"
+        status: true
+        step: 1
+        success: true
+        template: "EMAApplicationQuestionTemplate-WasTheTestInHomeOrLab"
+        template_type: "\"nl\""
+        stage: 'IN-PROGRESS'
+        endpoint: '{apiInfo.eva_get_intermediate_question:s}'
+        mappings: [{"key": "(TheNamedFn MedicallyRelatedCareEventType-EMA \"The care event type asked about\")","value": "GlucoseTest"}, {"key": "(TheNamedFn RealNumber \"the test value\")","value": !int "{blood_sugar_level_for_resp_parse:d}"}]
+
+  - name: Prompt question about whether the test was an in-home or lab test.
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_get_intermediate_question:s}"
+        json:
+          <<: *fetch_request_object_info
+
+          UserResponseProcessor: "process_by_cyc"
+          created_indexical: "(#$TheNamedFn #$MedicalTesting \"test the user mentioned\")"
+          created_indexical_trimmed: "(TheNamedFn MedicalTesting \"test the user mentioned\")"
+          created_mapping: "(#$TheList (#$TheNamedFn #$MedicalTesting \"test the user mentioned\") #${provide_user_info_for_test.user_info.user_model_name:s})"
+          created_new_term: '{provide_user_info_for_test.user_info.user_model_name:s}'
+          cyc_topics: ["Normal-Usual","GlucoseTest",!int "{blood_sugar_level_for_resp_parse:d}"]
+          endpoint: "{apiInfo.eva_get_intermediate_question:s}"
+          entities_and_cyc_terms: {}
+          error_responses: "Oops! Can I get back to you later?"
+          mappings: [{"key": "(TheNamedFn MedicallyRelatedCareEventType-EMA \"The care event type asked about\")","value": "GlucoseTest"}, {"key": "(TheNamedFn RealNumber \"the test value\")","value": !int "{blood_sugar_level_for_resp_parse:d}"}]
+          nl: "I need some additional information in order to answer this question.  Was your test an in-home or lab test?"
+          no_answer_nl: ""
+          null_responses: "Sorry! Cant answer at the moment due to an issue."
+          responseRequired: true
+          results_found_message: "nan"
+          search_suggestions: "nan"
+          return_user_state: true
+          stage: 'IN-PROGRESS'
+          status: true
+          step: 1
+          success: true
+          template: "EMAApplicationQuestionTemplate-WasTheTestInHomeOrLab"
+          template_type: "\"nl\""
+          user_response: "{test_conducted_place_resp}"
+
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+          UserResponseProcessor: "get_numeric_cardinals.0"
+          assert_key: "(#$TheNamedFn #$MedicalTestingType-LabOrHome \"the type the user indicated\")"
+          assert_value: "MedicalTesting-Home"
+          created_indexical: "(#$TheNamedFn #$MedicalTesting \"test the user mentioned\")"
+          created_indexical_trimmed: "(TheNamedFn MedicalTesting \"test the user mentioned\")"
+          created_mapping: "(#$TheList (#$TheNamedFn #$MedicalTesting \"test the user mentioned\") #${provide_user_info_for_test.user_info.user_model_name:s})"
+          created_new_term: "{provide_user_info_for_test.user_info.user_model_name:s}"
+          endpoint: "{apiInfo.eva_get_intermediate_question:s}"
+          mappings: [ {"key": "(TheNamedFn MedicalTesting \"test the user mentioned\")","value": "{provide_user_info_for_test.user_info.user_model_name:s}"},{"key": "(TheFn EMAApplicationUserSessionContext)","value": "{provide_user_info_for_test.user_info.session_id}"}, {"key": "(TheNamedFn CycLTemplate \"the template in question\")","value": "EMAApplicationQuestionTemplate-WasTheTestInHomeOrLab"}, {"key": "(TheNamedFn Set-Mathematical \\\"the concept set in question\\\")","value": {"type": "set","value": ["MedicalTesting-Home"]}}]
+          nl: "How long (in hours) before the test was your last meal?"
+          no_answer_nl: ""
+          responseRequired: true
+          results_found_message: "nan"
+          return_user_state: true
+          root_flow: "MedicalTesting-Home"
+          search_suggestions: "nan"
+          stage: 'IN-PROGRESS'
+          status: true
+          step: 6
+          success: true
+          template: "EMAApplicationQuestionTemplate-AskHowLongBeforeTestDidTheyEat"
+          template_type: "\"nl\""
+          user_original_response: "{test_conducted_place_resp}"
+          user_response: ""
+
+  - name: Answer queston "in-home or lab test" with "in home" as answer.
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_get_intermediate_question:s}"
+        json:
+          <<: *fetch_request_object_info
+
+          UserResponseProcessor: "get_numeric_cardinals.0"
+          assert_key: "(#$TheNamedFn #$MedicalTestingType-LabOrHome \"the type the user indicated\")"
+          assert_value: "MedicalTesting-Home"
+          created_indexical: "(#$TheNamedFn #$MedicalTesting \"test the user mentioned\")"
+          created_indexical_trimmed: "(TheNamedFn MedicalTesting \"test the user mentioned\")"
+          created_mapping: "(#$TheList (#$TheNamedFn #$MedicalTesting \"test the user mentioned\") #${provide_user_info_for_test.user_info.user_model_name})"
+          created_new_term: "{provide_user_info_for_test.user_info.user_model_name:s}"
+          cyc_topics: ["Normal-Usual","GlucoseTest",!int "{blood_sugar_level_for_resp_parse:d}"]
+          endpoint: "{apiInfo.eva_get_intermediate_question:s}"
+          entities_and_cyc_terms: {}
+          error_responses: "Oops! Can I get back to you later?"
+          mappings: [{"key": "(TheNamedFn MedicalTesting \"test the user mentioned\")","value": "{provide_user_info_for_test.user_info.user_model_name}"}, {"key": "(TheFn EMAApplicationUserSessionContext)","value": "{provide_user_info_for_test.user_info.session_id}"}, {"key": "(TheNamedFn CycLTemplate \"the template in question\")","value": "EMAApplicationQuestionTemplate-WasTheTestInHomeOrLab"}, {"key": "(TheNamedFn Set-Mathematical \\\"the concept set in question\\\")","value": {"type": "set","value": ["MedicalTesting-Home"]}}]
+          nl: "How long (in hours) before the test was your last meal?"
+          no_answer_nl: ""
+          null_responses: "Sorry! Cant answer at the moment due to an issue."
+          responseRequired: true
+          results_found_message: "nan"
+          return_user_state: true
+          root_flow: "MedicalTesting-Home"
+          search_suggestions: "nan"
+          stage: "IN-PROGRESS"
+          status: true
+          step: 6
+          success: true
+          template: "EMAApplicationQuestionTemplate-AskHowLongBeforeTestDidTheyEat"
+          template_type: "\"nl\""
+          user_original_response: "{test_conducted_place_resp}"
+          user_response: "{test_hours_before_meal}"
+
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+          UserResponseProcessor: "get_numeric_cardinals.0"
+          answer_sentence: "(#$LevelOfSubstanceTypeInSysTypeFn #$Glucose #$CirculatorySystem #$NormalLevelOfStandardSubstanceInSystem)"
+          assert_key: "(#$TheNamedFn #$RealNumber \"the number the user mentioned\")"
+          assert_value: 9
+          created_indexical: "(#$TheNamedFn #$MedicalTesting \"test the user mentioned\")"
+          created_indexical_trimmed: "(TheNamedFn MedicalTesting \"test the user mentioned\")"
+          created_mapping: "(#$TheList (#$TheNamedFn #$MedicalTesting \"test the user mentioned\") #${provide_user_info_for_test.user_info.user_model_name})"
+          created_new_term: "{provide_user_info_for_test.user_info.user_model_name:s}"
+          endpoint: "{apiInfo.eva_end:s}"
+          final_answer: "Remember that I am not a medical professional and the information I provide is not meant to be used to diagnose or determine treatment for any condition. That said, the results of your test seem to suggest normal blood glucose levels."
+          justification: ["You is evaluated in the test.", "The test is a home-based test.", "The test has result value of {blood_sugar_level_for_resp_parse}.", "You ate around {test_hours_before_meal} hours before the start of the test."]
+          mappings: [{"key": "(#$TheNamedFn #$MedicalTesting \"test the user mentioned\")", "value": "{provide_user_info_for_test.user_info.user_model_name}"}]
+          #nl: "Remember that I am not a medical professional and the information I provide is not meant to be used to diagnose or determine treatment for any condition. That said, the results of your test seem to suggest normal blood glucose levels."
+          no_answer_nl: ""
+          responseRequired: true
+          results_found_message: "nan"
+          return_user_state: true
+          root_flow: "MedicalTesting-Home"
+          search_suggestions: "nan"
+          stage: "COMPLETED"
+          status: true
+          step: 10
+          success: true
+          template: "EMAApplicationStatementTemplate-ParaphraseTestResults"
+          template_type: "\"nl\""
+          user_original_response: "{test_hours_before_meal}"
+
+
+  - name: Clear the session and remove model.
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_end:s}"
+        json:
+            <<: *fetch_request_object_info
+            user_response: ""
+            nl: ""
+            justification: ""
+        method: POST
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200

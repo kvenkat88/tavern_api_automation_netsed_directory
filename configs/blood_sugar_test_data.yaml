@@ -1,0 +1,11 @@
+name: Blood Sugar Flow Test Data patterns
+description: Yaml file to test with different combinations of test input.
+
+variables:
+  blood_sugar:
+    in-home:
+      - set1:
+          question: 'Is my blood sugar of 90 normal?'
+          level: 90
+          location: 'in-home'
+          hours: 9

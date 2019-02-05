@@ -1,0 +1,56 @@
+name: Common Test Information to validate the Ask Eva Chatbot
+description: URL speciciations, different username, model and session details
+
+variables:
+    usersInfo:
+        - type2_diabetes:
+            username: 'User1'
+            user_model_name: 'Test_J_233'
+            session_id: '233'
+
+
+    blood_sugar_test_metadata1:
+        diabetes_type2_positive_home:
+            blood_sugar_level: 200
+            test_conducted_in: in-home
+            hours: 9  # in Integers and will type cast to integer during test step invoke
+
+        diabetes_type2_positive_lab:
+            blood_sugar_level: 200
+            test_conducted_in: lab
+            hours: 500  # in Integers and will type cast to integer during test step invoke
+
+        diabetes_type2_negative_home:
+            blood_sugar_level: 200
+            test_conducted_in: in-home  # in-home / lab
+            hours: 9  # in Integers and will type cast to integer during test step invoke
+
+        diabetes_type2_negative_lab:
+            blood_sugar_level: 200
+            test_conducted_in: lab  # in-home / lab
+            hours: 9  # in Integers and will type cast to integer during test step invoke
+
+    host:
+        server_url: http://localhost:5000
+
+    apiInfo:
+        eva_get_question: '/eva_get_question'
+        eva_get_answer: '/eva_get_answer'
+        eva_create_and_get_answer: '/eva_create_and_get_answer'
+        eva_get_intermediate_question: '/eva_get_intermediate_question'
+        eva_get_intermediate_question_answered: '/eva_get_intermediate_question_answered'
+        eva_answer_primary_question: '/eva_answer_primary_question'
+        eva_end: '/eva_end'
+        eva_start: '/eva_start'
+        load_app_data: '/load_app_data'
+        register_user: '/register_user'
+        update_user: '/update_user'
+        kb_search: '/kb_search'
+
+    intentTemplateGroup:
+        - 'Complications'
+        - 'RiskFactors'
+        - 'Speciality'
+        - 'SuitablePhysician'
+
+

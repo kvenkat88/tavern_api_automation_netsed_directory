@@ -1,0 +1,42 @@
+name: Resusable component for session,model create and remove
+description: Reusable test stage for authentication/API testing start
+
+# Referencing and alaising a yaml fragments /Entire block referencing
+#https://github.com/taverntesting/tavern/tree/master/example/components
+
+# Don't mentionn the marks section with parametrize in the common/reference stages
+
+stages:
+  - id: create_session_models_for_type2_test
+    name: Create session and models
+    request:
+        url: "{host.server_url:s}{apiInfo.eva_start:s}"
+        method: POST
+        json:
+            username: "{provide_user_info_for_test.user_info.username}"
+            user_model_name: "{provide_user_info_for_test.user_info.user_model_name}"
+            session_id: "{provide_user_info_for_test.user_info.session_id}"
+            no_answer_nl: ''
+
+        headers:
+            content-type: application/json
+    response:
+        status_code: 200
+        body:
+            endpoint: '{apiInfo.eva_get_question:s}'
+
+  - id: clear_session_remove_models_for_type2_test
+    name: Clear the session and remove model
+    request:
+      url: "{host.server_url:s}{apiInfo.eva_end:s}"
+      json:
+        username: "{provide_user_info_for_test.user_info.username}"
+        user_model_name: "{provide_user_info_for_test.user_info.user_model_name}"
+        session_id: "{provide_user_info_for_test.user_info.session_id}"
+        user_response: ''
+        nl: ''
+      method: POST
+      headers:
+        content-type: application/json
+    response:
+      status_code: 200

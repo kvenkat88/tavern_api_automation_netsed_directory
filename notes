@@ -1,0 +1,14 @@
+As of now there is no possibility of using parallel test execution with Tavern
+
+
+https://stackoverflow.com/questions/49699477/is-it-possible-to-execute-the-same-test-in-parallel-in-pytest
+https://stackoverflow.com/questions/47439103/how-to-execute-tests-in-a-test-suite-in-parallel
+https://github.com/pytest-dev/pytest-xdist
+
+
+# Have to implement threading for this one(Subprocess with Threading module)
+# https://stackoverflow.com/questions/984941/python-subprocess-popen-from-a-thread
+# https://luckypants.weebly.com/subprocesses-and-multithreading.html
+# Search term - python popen threading thread
+# https://gist.github.com/kirpit/1306188
+# https://medium.com/@bfortuner/python-multithreading-vs-multiprocessing-73072ce5600b
